@@ -5,6 +5,9 @@ import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js'
 import { DRACOLoader } from 'three/examples/jsm/loaders/DRACOLoader.js'
 import { TransformControls } from 'three/examples/jsm/controls/TransformControls.js'
 
+import Button from './button'
+import GltfModel from './gltfmodel'
+
 const grassGreen = 0x3f7d1a
 
 const mouse = new THREE.Vector2()
@@ -68,19 +71,22 @@ const environmentMap = cubeTextureLoader.load([
 ])
 environmentMap.encoding = THREE.sRGBEncoding
 
-const sceneElements = [] as THREE.Object3D[]
-
 const scene = new THREE.Scene()
 
-const [bush, tree] = await Promise.all([
-  gltfLoader.loadAsync('/models/BirchTree_4.glb'),
-  gltfLoader.loadAsync('/models/CommonTree_1.glb'),
-])
-scene.add(bush.scene)
-scene.add(tree.scene)
-tree.scene.position.set(2, 0, 0)
-sceneElements.push(bush.scene)
-sceneElements.push(tree.scene)
+const control = new TransformControls(camera, renderer.domElement)
+control.addEventListener('dragging-changed', function (event) {
+  orbit.enabled = !event.value
+})
+scene.add(control)
+const orbit = new OrbitControls(camera, renderer.domElement)
+orbit.enableDamping = true
+
+new Button(scene, camera)
+
+await new GltfModel(scene, camera, control).loadModel('BirchTree_4')
+const pine = await new GltfModel(scene, camera, control).loadModel('PineTree_1')
+pine.position.x = 2
+
 updateAllMaterials()
 
 const ambientLight = new THREE.AmbientLight('#ffffff', 0.3)
@@ -121,64 +127,11 @@ window.addEventListener('resize', () => {
   renderer.setSize(sizes.width, sizes.height)
 })
 
-document.addEventListener('pointermove', onPointerMove)
-document.addEventListener('pointerdown', onClick)
-
 function animate() {
   requestAnimationFrame(animate)
 
   orbit.update()
   renderer.render(scene, camera)
-}
-
-const control = new TransformControls(camera, renderer.domElement)
-control.addEventListener('dragging-changed', function (event) {
-  orbit.enabled = !event.value
-})
-scene.add(control)
-const orbit = new OrbitControls(camera, renderer.domElement)
-orbit.enableDamping = true
-
-function onPointerMove(event: MouseEvent) {
-  event.preventDefault()
-
-  mouse.x = (event.clientX / window.innerWidth) * 2 - 1
-  mouse.y = -(event.clientY / window.innerHeight) * 2 + 1
-
-  raycaster.setFromCamera(mouse, camera)
-  const intersections = raycaster.intersectObjects(sceneElements, true)
-
-  if (intersections.length > 0 && !control.visible) {
-    document.body.style.cursor = 'pointer'
-  } else {
-    document.body.style.cursor = 'default'
-  }
-}
-
-function onClick(event: MouseEvent) {
-  event.preventDefault()
-
-  mouse.x = (event.clientX / window.innerWidth) * 2 - 1
-  mouse.y = -(event.clientY / window.innerHeight) * 2 + 1
-
-  raycaster.setFromCamera(mouse, camera)
-  const intersections = raycaster.intersectObjects(sceneElements, true)
-
-  if (intersections.length > 0 && !control.visible) {
-    const parent = sceneElements.find(
-      (element) => raycaster.intersectObject(element, true).length > 0
-    )
-    if (!parent) return
-    control.attach(parent)
-    document.body.style.cursor = 'default'
-
-    return
-  }
-
-  if (control.visible && !control.dragging) {
-    console.log(control.dragging)
-    control.detach()
-  }
 }
 
 animate()
