@@ -1,15 +1,17 @@
 import * as THREE from 'three'
 
-export interface Intercepted {
-  onClick(event: MouseEvent): void
-  onClickOut?(event: MouseEvent): void
-  onMouseEnter(event: MouseEvent): void
-  onMouseOut(event: MouseEvent): void
-  getObject3D(): THREE.Object3D
+import World, { WorldElement } from './world'
+
+export interface Intercepted extends WorldElement {
+  isDisabled: boolean
+  clickHandler(event: MouseEvent): void
+  clickOutHandler?(event: MouseEvent): void
+  mouseEnterHandler(event: MouseEvent): void
+  mouseOutHandler(event: MouseEvent): void
 }
 
 class Intersector {
-  private camera: THREE.Camera
+  private world: World = World.getInstance()
   private mouse: THREE.Vector2
   private raycaster: THREE.Raycaster
   private observers: Intercepted[]
@@ -17,8 +19,7 @@ class Intersector {
 
   private static instance: Intersector
 
-  private constructor(camera: THREE.Camera) {
-    this.camera = camera
+  private constructor() {
     this.mouse = new THREE.Vector2()
     this.raycaster = new THREE.Raycaster()
     this.observers = []
@@ -28,9 +29,9 @@ class Intersector {
     document.addEventListener('pointerdown', this.onClick)
   }
 
-  static getInstance(camera: THREE.Camera): Intersector {
+  static getInstance(): Intersector {
     if (!Intersector.instance) {
-      Intersector.instance = new Intersector(camera)
+      Intersector.instance = new Intersector()
     }
 
     return Intersector.instance
@@ -56,15 +57,14 @@ class Intersector {
     this.mouse.x = (event.clientX / window.innerWidth) * 2 - 1
     this.mouse.y = -(event.clientY / window.innerHeight) * 2 + 1
 
-    this.raycaster.setFromCamera(this.mouse, this.camera)
+    this.raycaster.setFromCamera(this.mouse, this.world.getCamera())
     for (const observer of this.observers) {
       const intersects =
         this.raycaster.intersectObject(observer.getObject3D(), true).length > 0
-      console.log(observer, intersects)
       if (intersects) {
-        observer.onClick(event)
+        observer.clickHandler(event)
       } else {
-        observer.onClickOut?.(event)
+        observer.clickOutHandler?.(event)
       }
     }
   }
@@ -75,18 +75,23 @@ class Intersector {
     this.mouse.x = (event.clientX / window.innerWidth) * 2 - 1
     this.mouse.y = -(event.clientY / window.innerHeight) * 2 + 1
 
-    this.raycaster.setFromCamera(this.mouse, this.camera)
+    this.raycaster.setFromCamera(this.mouse, this.world.getCamera())
     for (const observer of this.observers) {
+      const object3D = observer.getObject3D()
+
       const intersects =
-        this.raycaster.intersectObject(observer.getObject3D(), true).length > 0
+        this.raycaster.intersectObject(object3D, true).length > 0
       if (intersects) {
+        if (!object3D.visible) {
+          continue
+        }
         this.interceptedObjects.push(observer)
-        observer.onMouseEnter(event)
+        observer.mouseEnterHandler(event)
       } else {
         const index = this.interceptedObjects.indexOf(observer)
         if (index !== -1) {
           this.interceptedObjects.splice(index, 1)
-          observer.onMouseOut(event)
+          observer.mouseOutHandler(event)
         }
       }
     }

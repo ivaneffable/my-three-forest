@@ -3,60 +3,93 @@ import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader'
 import { DRACOLoader } from 'three/examples/jsm/loaders/DRACOLoader.js'
 import { TransformControls } from 'three/examples/jsm/controls/TransformControls.js'
 
-import Intersector, { Intercepted } from './intersector'
+import { Intercepted } from './intersector'
 
 class GltfModel implements Intercepted {
-  private controls: TransformControls
-  private scene: THREE.Scene
   private gltfLoader: GLTFLoader
   private object: THREE.Object3D = new THREE.Object3D()
+  private transformControl: TransformControls
 
-  constructor(
-    scene: THREE.Scene,
-    camera: THREE.Camera,
-    controls: TransformControls
-  ) {
-    this.scene = scene
-    this.controls = controls
+  isDisabled = false
 
-    Intersector.getInstance(camera).attach(this)
-
+  constructor(transformControl: TransformControls) {
     const dracoLoader = new DRACOLoader()
     dracoLoader.setDecoderPath('/draco/')
     this.gltfLoader = new GLTFLoader()
     this.gltfLoader.setDRACOLoader(dracoLoader)
+    this.transformControl = transformControl
   }
 
-  public async loadModel(model: string) {
+  async loadModel(model: string) {
     const gltf = await this.gltfLoader.loadAsync(`/models/${model}.glb`)
     this.object = gltf.scene
-    this.scene.add(this.object)
 
-    return this.object
+    return this
   }
 
   getObject3D = () => this.object
 
-  onMouseEnter(): void {
+  setPosition = (position: THREE.Vector3) => {
+    this.object.position.set(position.x, position.y, position.z)
+  }
+
+  setScale = (scale: number) => {
+    this.object.scale.set(scale, scale, scale)
+  }
+
+  mouseEnterHandler = () => {
+    if (this.isDisabled) {
+      return
+    }
+
     document.body.style.cursor = 'pointer'
   }
-  onMouseOut(): void {
-    document.body.style.cursor = 'default'
-  }
-
-  onClick = () => {
-    console.log('click')
-    if (!this.controls.dragging) {
-      this.controls.detach()
+  mouseOutHandler = () => {
+    if (this.isDisabled) {
+      return
     }
-    this.controls.attach(this.object)
+
     document.body.style.cursor = 'default'
   }
 
-  onClickOut = () => {
-    console.log('click out')
-    if (this.controls.object === this.object && !this.controls.dragging) {
-      this.controls.detach()
+  clickHandler = () => {
+    if (this.isDisabled) {
+      return
+    }
+
+    if (
+      this.transformControl.object === this.object &&
+      this.transformControl.mode === 'translate'
+    ) {
+      this.transformControl.setMode('rotate')
+      this.transformControl.showX = false
+      this.transformControl.showY = true
+      this.transformControl.showZ = false
+
+      this.transformControl.detach()
+    } else if (
+      (this.transformControl.object === this.object &&
+        this.transformControl.mode === 'rotate') ||
+      this.transformControl.object !== this.object
+    ) {
+      this.transformControl.setMode('translate')
+      this.transformControl.showX = true
+      this.transformControl.showY = false
+      this.transformControl.showZ = true
+
+      this.transformControl.detach()
+    }
+
+    this.transformControl.attach(this.object)
+    document.body.style.cursor = 'default'
+  }
+
+  clickOutHandler = () => {
+    if (
+      this.transformControl.object === this.object &&
+      !this.transformControl.dragging
+    ) {
+      this.transformControl.detach()
     }
   }
 }

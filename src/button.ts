@@ -4,25 +4,31 @@ import { RoundedBoxGeometry } from 'three/examples/jsm/geometries/RoundedBoxGeom
 import DroidSans from 'three/examples/fonts/droid/droid_sans_bold.typeface.json'
 import { TextGeometry } from 'three/examples/jsm/geometries/TextGeometry'
 
-import Intersector, { Intercepted } from './intersector'
+import gsap from 'gsap'
+
+import { Intercepted } from './intersector'
+
+const colors = {
+  primary: '#0000FF',
+  onHover: '#1414ff',
+}
 
 class Button implements Intercepted {
-  scene: THREE.Scene
-  camera: THREE.Camera
-  box: THREE.Mesh
-  raycaster: THREE.Raycaster
+  private box: THREE.Mesh
+  private buttonGroup: THREE.Group
+  private onClick: () => void
 
-  constructor(scene: THREE.Scene, camera: THREE.Camera) {
-    this.scene = scene
-    this.camera = camera
-    this.raycaster = new THREE.Raycaster()
+  isDisabled = false
 
-    Intersector.getInstance(camera).attach(this)
+  constructor(caption: string, onClick: () => void) {
+    this.onClick = onClick
+
+    this.buttonGroup = new THREE.Group()
 
     const fontLoader = new FontLoader()
-    const textGeometry = new TextGeometry('Click', {
+    const textGeometry = new TextGeometry(caption, {
       font: fontLoader.parse(DroidSans),
-      size: 0.5,
+      size: 0.4,
       height: 0.01,
       curveSegments: 5,
       bevelEnabled: true,
@@ -34,36 +40,73 @@ class Button implements Intercepted {
     textGeometry.computeBoundingBox()
     textGeometry.center()
 
-    const text = new THREE.Mesh(
-      textGeometry,
-      new THREE.MeshStandardMaterial({ color: '#FFFFFF' })
-    )
+    const textMaterial = new THREE.MeshStandardMaterial({ color: '#FFFFFF' })
+    textMaterial.transparent = true
+
+    const text = new THREE.Mesh(textGeometry, textMaterial)
     text.rotation.x = -Math.PI * 0.5
-    text.position.x = 4
     text.position.y = 0.05
-    scene.add(text)
+    text.castShadow = false
+    this.buttonGroup.add(text)
+
+    const measure = new THREE.Box3().setFromObject(text)
+    const boxMaterial = new THREE.MeshStandardMaterial({
+      color: colors.primary,
+    })
+    boxMaterial.transparent = true
 
     this.box = new THREE.Mesh(
-      new RoundedBoxGeometry(2, 1, 0.1),
-      new THREE.MeshStandardMaterial({ color: 0x0000ff })
+      new RoundedBoxGeometry(measure.max.x - measure.min.x + 0.5, 0.7, 0.1),
+      boxMaterial
     )
 
-    this.box.position.x = 4
     this.box.rotation.x = -Math.PI * 0.5
-    scene.add(this.box)
+    this.buttonGroup.add(this.box)
   }
 
-  getObject3D = () => this.box
+  getObject3D = () => this.buttonGroup
 
-  onMouseEnter(): void {
+  setPosition = (position: THREE.Vector3) => {
+    this.buttonGroup.position.set(position.x, position.y, position.z)
+  }
+
+  mouseEnterHandler = () => {
+    if (this.isDisabled) {
+      return
+    }
+
     document.body.style.cursor = 'pointer'
-  }
-  onMouseOut(): void {
-    document.body.style.cursor = 'default'
+    if (this.box.material instanceof THREE.MeshStandardMaterial) {
+      this.box.material.color.set(colors.onHover)
+    }
   }
 
-  onClick = (event: MouseEvent) => {
-    console.log('click')
+  mouseOutHandler = () => {
+    if (this.isDisabled) {
+      return
+    }
+
+    document.body.style.cursor = 'default'
+    if (this.box.material instanceof THREE.MeshStandardMaterial) {
+      this.box.material.color.set(colors.primary)
+    }
+  }
+
+  clickHandler = () => {
+    if (this.isDisabled) {
+      return
+    }
+
+    gsap.to(this.buttonGroup.position, {
+      duration: 0.1,
+      ease: 'power2.inOut',
+      y: '-=0.02',
+      yoyo: true,
+      repeat: 1,
+      onComplete: () => {
+        this.onClick()
+      },
+    })
   }
 }
 
