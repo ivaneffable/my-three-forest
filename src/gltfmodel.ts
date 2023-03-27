@@ -1,31 +1,25 @@
 import * as THREE from 'three'
-import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader'
-import { DRACOLoader } from 'three/examples/jsm/loaders/DRACOLoader.js'
 
 import { Intercepted } from './intersector'
 
 class GltfModel implements Intercepted {
-  private gltfLoader: GLTFLoader
+  private model: string
   private object: THREE.Object3D = new THREE.Object3D()
 
   onClick?: () => void
   onClickOut?: () => void
 
-  constructor() {
-    const dracoLoader = new DRACOLoader()
-    dracoLoader.setDecoderPath('/draco/')
-    this.gltfLoader = new GLTFLoader()
-    this.gltfLoader.setDRACOLoader(dracoLoader)
-  }
-
-  async loadModel(model: string) {
-    const gltf = await this.gltfLoader.loadAsync(`/models/${model}.glb`)
-    this.object = gltf.scene
-
-    return this
+  constructor(model: string) {
+    this.model = model
   }
 
   getWorldObject = () => this.object
+
+  setWorldObject = (object: THREE.Object3D) => {
+    this.object = object
+  }
+
+  getModel = () => this.model
 
   setPosition = (position: THREE.Vector3) => {
     this.object.position.set(position.x, position.y, position.z)
@@ -59,7 +53,7 @@ class GltfModel implements Intercepted {
   }
 
   clone = () => {
-    const clone = new GltfModel()
+    const clone = new GltfModel(this.getModel())
     clone.object = this.object.clone()
 
     return clone

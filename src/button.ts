@@ -64,29 +64,6 @@ class Button implements Intercepted {
 
   getWorldObject = () => this.buttonGroup
 
-  set positionX(x: number) {
-    this.buttonGroup.position.x = x
-  }
-
-  get positionX() {
-    return this.buttonGroup.position.x
-  }
-
-  set positionY(y: number) {
-    this.buttonGroup.position.y = y
-  }
-
-  get positionY() {
-    return this.buttonGroup.position.y
-  }
-
-  set positionZ(z: number) {
-    this.buttonGroup.position.z = z
-  }
-  get positionZ() {
-    return this.buttonGroup.position.z
-  }
-
   setPosition = (position: THREE.Vector3) => {
     this.buttonGroup.position.set(position.x, position.y, position.z)
   }

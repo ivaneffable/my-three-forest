@@ -12,13 +12,13 @@ const world = World.getInstance()
 
 let selectedTree = 0
 
-const birch = await new GltfModel().loadModel('BirchTree_4')
-const pine = await new GltfModel().loadModel('PineTree_1')
-const commonTree = await new GltfModel().loadModel('CommonTree_1')
-const willow = await new GltfModel().loadModel('Willow_1')
-const cactus = await new GltfModel().loadModel('Cactus_3')
-const rock = await new GltfModel().loadModel('Rock_1')
-const rockMoss = await new GltfModel().loadModel('Rock_Moss_6')
+const birch = await world.loadModel(new GltfModel('BirchTree_4'))
+const pine = await world.loadModel(new GltfModel('PineTree_1'))
+const commonTree = await world.loadModel(new GltfModel('CommonTree_1'))
+const willow = await world.loadModel(new GltfModel('Willow_1'))
+const cactus = await world.loadModel(new GltfModel('Cactus_3'))
+const rock = await world.loadModel(new GltfModel('Rock_1'))
+const rockMoss = await world.loadModel(new GltfModel('Rock_Moss_6'))
 const trees = [birch, pine, commonTree, willow, cactus, rock, rockMoss]
 
 trees.forEach((tree) => {

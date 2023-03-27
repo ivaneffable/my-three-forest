@@ -5,6 +5,7 @@ import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js'
 import { DRACOLoader } from 'three/examples/jsm/loaders/DRACOLoader.js'
 import { TransformControls } from 'three/examples/jsm/controls/TransformControls.js'
 
+import GltfModel from './gltfmodel'
 import Intersector, { Intercepted } from './intersector'
 
 export interface WorldElement {
@@ -16,6 +17,7 @@ class World {
   private camera: THREE.PerspectiveCamera
   private transformControl: TransformControls
   private environmentMap: THREE.CubeTexture
+  private gltfLoader: GLTFLoader
 
   private static instance: World
 
@@ -51,8 +53,8 @@ class World {
     const dracoLoader = new DRACOLoader()
     dracoLoader.setDecoderPath('/draco/')
 
-    const gltfLoader = new GLTFLoader()
-    gltfLoader.setDRACOLoader(dracoLoader)
+    this.gltfLoader = new GLTFLoader()
+    this.gltfLoader.setDRACOLoader(dracoLoader)
 
     const cubeTextureLoader = new THREE.CubeTextureLoader()
     this.environmentMap = cubeTextureLoader.load([
@@ -116,6 +118,15 @@ class World {
     animate()
   }
 
+  async loadModel(glftModel: GltfModel) {
+    const gltf = await this.gltfLoader.loadAsync(
+      `/models/${glftModel.getModel()}.glb`
+    )
+    glftModel.setWorldObject(gltf.scene)
+
+    return glftModel
+  }
+
   updateAllMaterials = () => {
     this.scene.traverse((child) => {
       if (
@@ -130,7 +141,7 @@ class World {
     })
   }
 
-  add = (object: WorldElement | THREE.Mesh) => {
+  add = async (object: WorldElement | THREE.Mesh) => {
     this.scene.add(
       object instanceof THREE.Mesh ? object : object.getWorldObject()
     )
