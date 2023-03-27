@@ -18,8 +18,6 @@ class Button implements Intercepted {
   private buttonGroup: THREE.Group
   private onClick: () => void
 
-  isDisabled = false
-
   constructor(caption: string, onClick: () => void) {
     this.onClick = onClick
 
@@ -64,14 +62,37 @@ class Button implements Intercepted {
     this.buttonGroup.add(this.box)
   }
 
-  getObject3D = () => this.buttonGroup
+  getWorldObject = () => this.buttonGroup
+
+  set positionX(x: number) {
+    this.buttonGroup.position.x = x
+  }
+
+  get positionX() {
+    return this.buttonGroup.position.x
+  }
+
+  set positionY(y: number) {
+    this.buttonGroup.position.y = y
+  }
+
+  get positionY() {
+    return this.buttonGroup.position.y
+  }
+
+  set positionZ(z: number) {
+    this.buttonGroup.position.z = z
+  }
+  get positionZ() {
+    return this.buttonGroup.position.z
+  }
 
   setPosition = (position: THREE.Vector3) => {
     this.buttonGroup.position.set(position.x, position.y, position.z)
   }
 
   mouseEnterHandler = () => {
-    if (this.isDisabled) {
+    if (!this.onClick) {
       return
     }
 
@@ -82,7 +103,7 @@ class Button implements Intercepted {
   }
 
   mouseOutHandler = () => {
-    if (this.isDisabled) {
+    if (!this.onClick) {
       return
     }
 
@@ -93,7 +114,7 @@ class Button implements Intercepted {
   }
 
   clickHandler = () => {
-    if (this.isDisabled) {
+    if (!this.onClick) {
       return
     }
 

@@ -1,5 +1,6 @@
 import './style.css'
 import * as THREE from 'three'
+import gsap from 'gsap'
 
 import World from './world'
 import Button from './button'
@@ -9,32 +10,83 @@ const grassGreen = 0x3f7d1a
 
 const world = World.getInstance()
 
-const addButton = new Button('+', () => {
-  const randomTree = Math.floor(Math.random() * threes.length)
-  const tree = threes[randomTree]
-  tree.setPosition(new THREE.Vector3(5.5, 1.25, 7))
-  tree.setScale(0.4)
-  world.add(tree)
+let selectedTree = 0
 
-  world.remove(addButton)
+const birch = await new GltfModel().loadModel('BirchTree_4')
+const pine = await new GltfModel().loadModel('PineTree_1')
+const commonTree = await new GltfModel().loadModel('CommonTree_1')
+const willow = await new GltfModel().loadModel('Willow_1')
+const cactus = await new GltfModel().loadModel('Cactus_3')
+const rock = await new GltfModel().loadModel('Rock_1')
+const rockMoss = await new GltfModel().loadModel('Rock_Moss_6')
+const trees = [birch, pine, commonTree, willow, cactus, rock, rockMoss]
+
+trees.forEach((tree) => {
+  tree.setScale(0.6)
+  tree.setPosition(new THREE.Vector3(5.9, 1, 7))
+  gsap.to(tree.getWorldObject().rotation, {
+    duration: 5,
+    y: 2 * Math.PI,
+    ease: 'none',
+    repeat: -1,
+  })
 })
-addButton.setPosition(new THREE.Vector3(5.5, 0, 7))
-world.add(addButton)
-const transformButton = new Button('Move', () => {
-  console.log('Translate')
+
+const moveCameraIfFar = () => {
+  const camera = world.getCamera()
+  const distance = camera.position.distanceTo(new THREE.Vector3(7.5, 3, 14))
+  if (distance > 2) {
+    gsap.to(camera.position, {
+      duration: 1.5,
+      x: 7.5,
+      y: 3,
+      z: 14,
+      ease: 'power4.out',
+    })
+  }
+}
+
+const removeCurrentTree = () => {
+  world.remove(trees[selectedTree])
+}
+
+const selectButton = new Button('+', () => {
+  const newTree = trees[selectedTree].clone()
+  newTree.setScale(1)
+  newTree.setPosition(new THREE.Vector3(0, 0, 7))
+  world.toggleTransformControl(newTree)
+  world.add(newTree)
+  newTree.onClick = () => {
+    world.toggleTransformControl(newTree)
+  }
+  newTree.onClickOut = () => {
+    world.removeTransformControl(newTree)
+  }
 })
-transformButton.setPosition(new THREE.Vector3(3.5, 0, 6))
+selectButton.setPosition(new THREE.Vector3(5.9, 0, 7))
 
-const transformControl = world.getTransformControl()
+const moveLeftButton = new Button('<', () => {
+  moveCameraIfFar()
+  removeCurrentTree()
 
-const birch = await new GltfModel(transformControl).loadModel('BirchTree_4')
-const pine = await new GltfModel(transformControl).loadModel('PineTree_1')
-const commonTree = await new GltfModel(transformControl).loadModel(
-  'CommonTree_1'
-)
-const willow = await new GltfModel(transformControl).loadModel('Willow_1')
+  selectedTree = selectedTree === 0 ? trees.length - 1 : selectedTree - 1
+  world.add(trees[selectedTree])
+})
+moveLeftButton.setPosition(new THREE.Vector3(5, 0, 7))
 
-const threes = [birch, pine, commonTree, willow]
+const moveRightButton = new Button('>', () => {
+  moveCameraIfFar()
+  removeCurrentTree()
+
+  selectedTree = selectedTree === trees.length - 1 ? 0 : selectedTree + 1
+  world.add(trees[selectedTree])
+})
+moveRightButton.setPosition(new THREE.Vector3(6.8, 0, 7))
+
+world.add(trees[selectedTree])
+world.add(moveLeftButton)
+world.add(moveRightButton)
+world.add(selectButton)
 
 const geometry = new THREE.PlaneGeometry(15, 15)
 const material = new THREE.MeshStandardMaterial({
@@ -48,8 +100,3 @@ plane.rotation.x = -Math.PI * 0.5
 plane.receiveShadow = true
 plane.castShadow = true
 world.add(plane)
-
-birch.setPosition(new THREE.Vector3(0, 0, 0))
-world.add(birch)
-
-world.updateAllMaterials()

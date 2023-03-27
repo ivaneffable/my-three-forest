@@ -3,7 +3,6 @@ import * as THREE from 'three'
 import World, { WorldElement } from './world'
 
 export interface Intercepted extends WorldElement {
-  isDisabled: boolean
   clickHandler(event: MouseEvent): void
   clickOutHandler?(event: MouseEvent): void
   mouseEnterHandler(event: MouseEvent): void
@@ -60,7 +59,8 @@ class Intersector {
     this.raycaster.setFromCamera(this.mouse, this.world.getCamera())
     for (const observer of this.observers) {
       const intersects =
-        this.raycaster.intersectObject(observer.getObject3D(), true).length > 0
+        this.raycaster.intersectObject(observer.getWorldObject(), true).length >
+        0
       if (intersects) {
         observer.clickHandler(event)
       } else {
@@ -77,7 +77,7 @@ class Intersector {
 
     this.raycaster.setFromCamera(this.mouse, this.world.getCamera())
     for (const observer of this.observers) {
-      const object3D = observer.getObject3D()
+      const object3D = observer.getWorldObject()
 
       const intersects =
         this.raycaster.intersectObject(object3D, true).length > 0

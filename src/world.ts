@@ -8,7 +8,7 @@ import { TransformControls } from 'three/examples/jsm/controls/TransformControls
 import Intersector, { Intercepted } from './intersector'
 
 export interface WorldElement {
-  getObject3D(): THREE.Object3D
+  getWorldObject(): THREE.Object3D
 }
 
 class World {
@@ -46,7 +46,7 @@ class World {
       1,
       500
     )
-    this.camera.position.set(0, 6, 14)
+    this.camera.position.set(7.5, 3, 14)
 
     const dracoLoader = new DRACOLoader()
     dracoLoader.setDecoderPath('/draco/')
@@ -131,11 +131,14 @@ class World {
   }
 
   add = (object: WorldElement | THREE.Mesh) => {
-    this.scene.add(object instanceof THREE.Mesh ? object : object.getObject3D())
+    this.scene.add(
+      object instanceof THREE.Mesh ? object : object.getWorldObject()
+    )
 
     if ('clickHandler' in object) {
       Intersector.getInstance().attach(object as Intercepted)
     }
+    this.updateAllMaterials()
   }
 
   remove = (object: WorldElement | THREE.Mesh) => {
@@ -144,13 +147,50 @@ class World {
     }
 
     this.scene.remove(
-      object instanceof THREE.Mesh ? object : object.getObject3D()
+      object instanceof THREE.Mesh ? object : object.getWorldObject()
     )
   }
 
   getCamera = () => this.camera
 
-  getTransformControl = () => this.transformControl
+  toggleTransformControl = (object: WorldElement) => {
+    const worldObject = object.getWorldObject()
+    if (
+      this.transformControl.object === worldObject &&
+      this.transformControl.mode === 'translate'
+    ) {
+      this.transformControl.setMode('rotate')
+      this.transformControl.showX = false
+      this.transformControl.showY = true
+      this.transformControl.showZ = false
+
+      this.transformControl.detach()
+    } else if (
+      (this.transformControl.object === worldObject &&
+        this.transformControl.mode === 'rotate') ||
+      this.transformControl.object !== worldObject
+    ) {
+      this.transformControl.setMode('translate')
+      this.transformControl.showX = true
+      this.transformControl.showY = false
+      this.transformControl.showZ = true
+
+      this.transformControl.detach()
+    }
+
+    this.transformControl.attach(worldObject)
+    document.body.style.cursor = 'default'
+  }
+
+  removeTransformControl = (object: WorldElement) => {
+    const worldObject = object.getWorldObject()
+    if (
+      this.transformControl.object === worldObject &&
+      !this.transformControl.dragging
+    ) {
+      this.transformControl.detach()
+    }
+  }
 
   static getInstance(): World {
     if (!World.instance) {
