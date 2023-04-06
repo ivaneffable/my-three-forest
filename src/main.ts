@@ -123,25 +123,38 @@ plane.receiveShadow = true
 plane.castShadow = true
 world.add(plane)
 
-const cube = new THREE.Mesh(
-  new THREE.BoxGeometry(5, 5, 5),
-  new THREE.MeshBasicMaterial({ color: 'red' })
-)
-cube.position.set(0, 2.5, 0)
-world.add(cube)
+// const cube = new THREE.Mesh(
+//   new THREE.BoxGeometry(5, 5, 5),
+//   new THREE.MeshBasicMaterial({ color: 'red' })
+// )
+// cube.position.set(0, 2.5, 0)
+// world.add(cube)
 
 const content = `<div>
-  <h3>AD</h3>
-  <ins
-  class="adsbygoogle"
-  style="display: inline-block; width: 450px; height: 200px"
-  data-ad-client="ca-pub-5949634287255808"
-  data-ad-slot="5648580138"
-  ></ins>
+  <h3>the Ad appears here...</h3>
 </div>`
 
 const cssElement = createCSS3DObject(content)
 cssElement.scale.set(0.05, 0.05, 0.05)
 cssElement.position.set(0, 2.5, 1.25)
+
+const ins = document.createElement('ins')
+ins.className = 'adsbygoogle'
+ins.style.display = 'block'
+ins.style.width = '450px'
+ins.style.height = '200px'
+ins.style.display = 'block'
+const attClient = document.createAttribute('data-ad-client')
+ins.setAttributeNode(attClient)
+attClient.value = 'ca-pub-5949634287255808'
+const attSlot = document.createAttribute('data-ad-slot')
+attSlot.value = '5648580138'
+ins.setAttributeNode(attSlot)
+
+const myScript = document.createElement('script')
+myScript.setAttribute('type', 'text/javascript')
+myScript.innerHTML = '(adsbygoogle = window.adsbygoogle || []).push({});'
+
+cssElement.element.appendChild(ins)
 
 world.add(cssElement)
