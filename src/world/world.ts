@@ -7,6 +7,11 @@ import { DRACOLoader } from 'three/examples/jsm/loaders/DRACOLoader.js'
 import Intersector, { Intercepted } from './intersector'
 import TransformController from './transformController'
 
+import {
+  CSS3DObject,
+  CSS3DRenderer,
+} from 'three/examples/jsm/renderers/CSS3DRenderer.js'
+
 export interface WorldElement {
   getWorldObject(): THREE.Object3D
   setWorldObject(object: THREE.Object3D): void
@@ -46,6 +51,14 @@ class World {
     document.body.appendChild(renderer.domElement)
     renderer.domElement.setAttribute('class', 'webgl')
 
+    /**
+     * CSS3 stuff
+     */
+    const cssRenderer = new CSS3DRenderer()
+    cssRenderer.setSize(sizes.width, sizes.height)
+    document.body.appendChild(cssRenderer.domElement)
+    cssRenderer.domElement.setAttribute('class', 'webgl')
+
     this.camera = new THREE.PerspectiveCamera(
       45,
       sizes.width / sizes.height,
@@ -71,7 +84,7 @@ class World {
     ])
     this.environmentMap.encoding = THREE.sRGBEncoding
 
-    const orbit = new OrbitControls(this.camera, renderer.domElement)
+    const orbit = new OrbitControls(this.camera, cssRenderer.domElement)
     orbit.enableDamping = true
 
     this.transformController = new TransformController(this.camera, renderer)
@@ -111,6 +124,7 @@ class World {
 
       orbit.update()
       renderer.render(this.scene, this.camera)
+      cssRenderer.render(this.scene, this.camera)
     }
 
     animate()
@@ -137,9 +151,9 @@ class World {
     })
   }
 
-  add = async (object: WorldElement | THREE.Mesh) => {
+  add = async (object: WorldElement | THREE.Mesh | CSS3DObject) => {
     this.scene.add(
-      object instanceof THREE.Mesh ? object : object.getWorldObject()
+      'getWorldObject' in object ? object.getWorldObject() : object
     )
 
     if ('clickHandler' in object) {

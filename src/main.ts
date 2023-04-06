@@ -5,6 +5,21 @@ import { World } from './world'
 import Button from './components/button'
 import GltfModel from './components/gltfmodel'
 
+import { CSS3DObject } from 'three/examples/jsm/renderers/CSS3DRenderer.js'
+
+function createCSS3DObject(content: string) {
+  const wrapper = document.createElement('div')
+  wrapper.innerHTML = content
+  const div = wrapper.firstChild as HTMLDivElement
+  // set some values on the div to style it. // normally you do this directly in HTML and // CSS files.
+  div.style.width = '150px'
+  div.style.height = '150px'
+  div.style.color = 'blue'
+  // create a CSS3Dobject and return it.
+  const object = new CSS3DObject(div)
+  return object
+}
+
 const grassGreen = 0x3f7d1a
 
 const world = World.getInstance()
@@ -107,3 +122,26 @@ plane.rotation.x = -Math.PI * 0.5
 plane.receiveShadow = true
 plane.castShadow = true
 world.add(plane)
+
+const cube = new THREE.Mesh(
+  new THREE.BoxGeometry(5, 5, 5),
+  new THREE.MeshBasicMaterial({ color: 'red' })
+)
+cube.position.set(0, 2.5, 0)
+world.add(cube)
+
+const content = `<div>
+  <h3>AD</h3>
+  <ins
+  class="adsbygoogle"
+  style="display: inline-block; width: 450px; height: 200px"
+  data-ad-client="ca-pub-5949634287255808"
+  data-ad-slot="5648580138"
+  ></ins>
+</div>`
+
+const cssElement = createCSS3DObject(content)
+cssElement.scale.set(0.05, 0.05, 0.05)
+cssElement.position.set(0, 2.5, 1.25)
+
+world.add(cssElement)
