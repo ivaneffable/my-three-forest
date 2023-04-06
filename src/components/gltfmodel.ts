@@ -1,6 +1,6 @@
 import * as THREE from 'three'
 
-import { Intercepted } from './intersector'
+import { Intercepted } from '../world'
 
 class GltfModel implements Intercepted {
   private model: string

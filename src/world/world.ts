@@ -3,19 +3,23 @@ import * as THREE from 'three'
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js'
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js'
 import { DRACOLoader } from 'three/examples/jsm/loaders/DRACOLoader.js'
-import { TransformControls } from 'three/examples/jsm/controls/TransformControls.js'
 
-import GltfModel from './gltfmodel'
 import Intersector, { Intercepted } from './intersector'
+import TransformController from './transformController'
 
 export interface WorldElement {
   getWorldObject(): THREE.Object3D
+  setWorldObject(object: THREE.Object3D): void
+}
+
+export interface WorldModel extends WorldElement {
+  getModel(): string
 }
 
 class World {
   private scene: THREE.Scene
   private camera: THREE.PerspectiveCamera
-  private transformControl: TransformControls
+  private transformController: TransformController
   private environmentMap: THREE.CubeTexture
   private gltfLoader: GLTFLoader
 
@@ -70,18 +74,12 @@ class World {
     const orbit = new OrbitControls(this.camera, renderer.domElement)
     orbit.enableDamping = true
 
-    this.transformControl = new TransformControls(
-      this.camera,
-      renderer.domElement
-    )
-    this.transformControl.showY = false
-    this.transformControl.addEventListener(
-      'dragging-changed',
-      function (event) {
-        orbit.enabled = !event.value
-      }
-    )
-    this.scene.add(this.transformControl)
+    this.transformController = new TransformController(this.camera, renderer)
+    const transformControl = this.transformController.getTransformControl()
+    transformControl.addEventListener('dragging-changed', function (event) {
+      orbit.enabled = !event.value
+    })
+    this.scene.add(transformControl)
 
     const ambientLight = new THREE.AmbientLight('#ffffff', 0.3)
     this.scene.add(ambientLight)
@@ -118,13 +116,11 @@ class World {
     animate()
   }
 
-  async loadModel(glftModel: GltfModel) {
+  async loadModel(glftModel: WorldModel) {
     const gltf = await this.gltfLoader.loadAsync(
       `/models/${glftModel.getModel()}.glb`
     )
     glftModel.setWorldObject(gltf.scene)
-
-    return glftModel
   }
 
   updateAllMaterials = () => {
@@ -165,42 +161,11 @@ class World {
   getCamera = () => this.camera
 
   toggleTransformControl = (object: WorldElement) => {
-    const worldObject = object.getWorldObject()
-    if (
-      this.transformControl.object === worldObject &&
-      this.transformControl.mode === 'translate'
-    ) {
-      this.transformControl.setMode('rotate')
-      this.transformControl.showX = false
-      this.transformControl.showY = true
-      this.transformControl.showZ = false
-
-      this.transformControl.detach()
-    } else if (
-      (this.transformControl.object === worldObject &&
-        this.transformControl.mode === 'rotate') ||
-      this.transformControl.object !== worldObject
-    ) {
-      this.transformControl.setMode('translate')
-      this.transformControl.showX = true
-      this.transformControl.showY = false
-      this.transformControl.showZ = true
-
-      this.transformControl.detach()
-    }
-
-    this.transformControl.attach(worldObject)
-    document.body.style.cursor = 'default'
+    this.transformController.toggleTransformControl(object)
   }
 
   removeTransformControl = (object: WorldElement) => {
-    const worldObject = object.getWorldObject()
-    if (
-      this.transformControl.object === worldObject &&
-      !this.transformControl.dragging
-    ) {
-      this.transformControl.detach()
-    }
+    this.transformController.removeTransformControl(object)
   }
 
   static getInstance(): World {

@@ -1,10 +1,9 @@
-import './style.css'
 import * as THREE from 'three'
 import gsap from 'gsap'
 
-import World from './world'
-import Button from './button'
-import GltfModel from './gltfmodel'
+import { World } from './world'
+import Button from './components/button'
+import GltfModel from './components/gltfmodel'
 
 const grassGreen = 0x3f7d1a
 
@@ -12,13 +11,21 @@ const world = World.getInstance()
 
 let selectedTree = 0
 
-const birch = await world.loadModel(new GltfModel('BirchTree_4'))
-const pine = await world.loadModel(new GltfModel('PineTree_1'))
-const commonTree = await world.loadModel(new GltfModel('CommonTree_1'))
-const willow = await world.loadModel(new GltfModel('Willow_1'))
-const cactus = await world.loadModel(new GltfModel('Cactus_3'))
-const rock = await world.loadModel(new GltfModel('Rock_1'))
-const rockMoss = await world.loadModel(new GltfModel('Rock_Moss_6'))
+const birch = new GltfModel('BirchTree_4')
+const pine = new GltfModel('PineTree_1')
+const commonTree = new GltfModel('CommonTree_1')
+const willow = new GltfModel('Willow_1')
+const cactus = new GltfModel('Cactus_3')
+const rock = new GltfModel('Rock_1')
+const rockMoss = new GltfModel('Rock_Moss_6')
+
+await world.loadModel(birch)
+await world.loadModel(pine)
+await world.loadModel(commonTree)
+await world.loadModel(willow)
+await world.loadModel(cactus)
+await world.loadModel(rock)
+await world.loadModel(rockMoss)
 const trees = [birch, pine, commonTree, willow, cactus, rock, rockMoss]
 
 trees.forEach((tree) => {

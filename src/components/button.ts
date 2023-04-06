@@ -6,7 +6,7 @@ import { TextGeometry } from 'three/examples/jsm/geometries/TextGeometry'
 
 import gsap from 'gsap'
 
-import { Intercepted } from './intersector'
+import { Intercepted } from '../world'
 
 const colors = {
   primary: '#0000FF',
@@ -60,6 +60,10 @@ class Button implements Intercepted {
 
     this.box.rotation.x = -Math.PI * 0.5
     this.buttonGroup.add(this.box)
+  }
+
+  setWorldObject = () => {
+    throw new Error('Method not implemented.')
   }
 
   getWorldObject = () => this.buttonGroup
