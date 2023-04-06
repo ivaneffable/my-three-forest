@@ -87,7 +87,10 @@ class World {
     const orbit = new OrbitControls(this.camera, cssRenderer.domElement)
     orbit.enableDamping = true
 
-    this.transformController = new TransformController(this.camera, renderer)
+    this.transformController = new TransformController(
+      this.camera,
+      cssRenderer.domElement
+    )
     const transformControl = this.transformController.getTransformControl()
     transformControl.addEventListener('dragging-changed', function (event) {
       orbit.enabled = !event.value
@@ -123,8 +126,8 @@ class World {
       requestAnimationFrame(animate)
 
       orbit.update()
-      renderer.render(this.scene, this.camera)
       cssRenderer.render(this.scene, this.camera)
+      renderer.render(this.scene, this.camera)
     }
 
     animate()

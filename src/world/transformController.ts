@@ -5,8 +5,8 @@ import { WorldElement } from './world'
 class TransformController {
   private transformControl: TransformControls
 
-  constructor(camera: THREE.PerspectiveCamera, renderer: THREE.WebGLRenderer) {
-    this.transformControl = new TransformControls(camera, renderer.domElement)
+  constructor(camera: THREE.PerspectiveCamera, element: HTMLElement) {
+    this.transformControl = new TransformControls(camera, element)
   }
 
   public getTransformControl(): TransformControls {
